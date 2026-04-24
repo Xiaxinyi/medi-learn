@@ -1,0 +1,45 @@
+/* uni.scss */
+@import 'uview-plus/theme.scss';
+
+/* 主题色 */
+$uni-primary: #2B9939;
+$uni-primary-light: #E8F5E9;
+$uni-primary-dark: #1B7A2B;
+
+/* 辅助色 */
+$uni-success: #4CAF50;
+$uni-warning: #FF9800;
+$uni-error: #F44336;
+$uni-info: #2196F3;
+
+/* 文字色 */
+$uni-text-color: #333333;
+$uni-text-color-grey: #999999;
+$uni-text-color-placeholder: #CCCCCC;
+
+/* 背景色 */
+$uni-bg-color: #F5F5F5;
+$uni-bg-color-white: #FFFFFF;
+$uni-bg-color-grey: #F8F8F8;
+
+/* 边框色 */
+$uni-border-color: #E5E5E5;
+$uni-border-color-light: #EEEEEE;
+
+/* 字体大小 */
+$uni-font-size-sm: 24rpx;
+$uni-font-size-base: 28rpx;
+$uni-font-size-lg: 32rpx;
+$uni-font-size-xl: 36rpx;
+$uni-font-size-xxl: 40rpx;
+
+/* 间距 */
+$uni-spacing-sm: 16rpx;
+$uni-spacing-base: 24rpx;
+$uni-spacing-lg: 32rpx;
+
+/* 圆角 */
+$uni-border-radius-sm: 8rpx;
+$uni-border-radius-base: 16rpx;
+$uni-border-radius-lg: 24rpx;
+$uni-border-radius-circle: 50%;

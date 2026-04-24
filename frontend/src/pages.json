@@ -1,0 +1,120 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/herbs/list",
+      "style": {
+        "navigationBarTitleText": "草药大全"
+      }
+    },
+    {
+      "path": "pages/herbs/detail",
+      "style": {
+        "navigationBarTitleText": "草药详情"
+      }
+    },
+    {
+      "path": "pages/herbs/edit",
+      "style": {
+        "navigationBarTitleText": "编辑草药"
+      }
+    },
+    {
+      "path": "pages/quiz/practice",
+      "style": {
+        "navigationBarTitleText": "试题练习"
+      }
+    },
+    {
+      "path": "pages/quiz/result",
+      "style": {
+        "navigationBarTitleText": "练习结果"
+      }
+    },
+    {
+      "path": "pages/wrongbook/list",
+      "style": {
+        "navigationBarTitleText": "错题本"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/profile/login",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/profile/settings",
+      "style": {
+        "navigationBarTitleText": "设置"
+      }
+    },
+    {
+      "path": "pages/formulas/list",
+      "style": {
+        "navigationBarTitleText": "方剂大全"
+      }
+    },
+    {
+      "path": "pages/formulas/detail",
+      "style": {
+        "navigationBarTitleText": "方剂详情"
+      }
+    },
+    {
+      "path": "pages/feedback/index",
+      "style": {
+        "navigationBarTitleText": "反馈建议"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "中医学习",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#2B9939",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/herbs/list",
+        "text": "草药",
+        "iconPath": "static/tabbar/herb.png",
+        "selectedIconPath": "static/tabbar/herb-active.png"
+      },
+      {
+        "pagePath": "pages/quiz/practice",
+        "text": "练习",
+        "iconPath": "static/tabbar/quiz.png",
+        "selectedIconPath": "static/tabbar/quiz-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "static/tabbar/profile.png",
+        "selectedIconPath": "static/tabbar/profile-active.png"
+      }
+    ]
+  }
+}

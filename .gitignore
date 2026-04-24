@@ -1,0 +1,31 @@
+# Dependencies
+frontend/node_modules/
+frontend/dist/
+frontend/unpackage/
+backend/venv/
+backend/__pycache__/
+backend/**/*.pyc
+backend/.pytest_cache/
+
+# Environment
+backend/.env
+frontend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads
+backend/uploads/
+backend/test.db
+*.db
+
+# Logs
+*.log
+npm-debug.log*
