@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 from typing import Optional, List
 from datetime import datetime
 
@@ -51,6 +51,14 @@ class QuestionResponse(QuestionBase):
     created_at: datetime
     updated_at: datetime
     options: List[QuestionOptionResponse] = []
+    correct_answers: List[str] = Field(default=[], alias='correctAnswers')
+
+    @model_validator(mode='after')
+    def compute_correct_answers(self):
+        self.correct_answers = [
+            opt.option_key for opt in self.options if opt.is_correct
+        ]
+        return self
 
     class Config:
         from_attributes = True

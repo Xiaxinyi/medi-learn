@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # 数据库配置
-    DATABASE_URL: str = "mysql+pymysql://root:password@localhost:3306/tcm_learning?charset=utf8mb4"
+    DATABASE_URL: str = "mysql+pymysql://4WPwhw6ZVTNxevM.root:5DMRaqFzxBwFk0Pi@gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/test?charset=utf8mb4"
     
     # JWT配置
     SECRET_KEY: str = "your-secret-key-change-in-production"
@@ -31,7 +31,12 @@ class Settings(BaseSettings):
     # 微信登录配置
     WECHAT_APPID: str = ""
     WECHAT_SECRET: str = ""
-    
+
+    # AI配置（支持OpenAI兼容接口）
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+    OPENAI_MODEL: str = "gpt-4o-mini"
+
     class Config:
         env_file = ".env"
 

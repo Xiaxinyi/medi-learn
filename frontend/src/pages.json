@@ -77,6 +77,30 @@
       "style": {
         "navigationBarTitleText": "反馈建议"
       }
+    },
+    {
+      "path": "pages/admin/users",
+      "style": {
+        "navigationBarTitleText": "用户管理"
+      }
+    },
+    {
+      "path": "pages/admin/herbs",
+      "style": {
+        "navigationBarTitleText": "草药管理"
+      }
+    },
+    {
+      "path": "pages/admin/questions",
+      "style": {
+        "navigationBarTitleText": "试题管理"
+      }
+    },
+    {
+      "path": "pages/admin/formulas",
+      "style": {
+        "navigationBarTitleText": "方剂管理"
+      }
     }
   ],
   "globalStyle": {

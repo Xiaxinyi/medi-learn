@@ -1,6 +1,6 @@
 import random
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.question import Question, QuestionOption
 
@@ -11,17 +11,20 @@ class QuestionService:
         db: Session,
         type: Optional[str] = None,
         difficulty: Optional[str] = None,
+        search: Optional[str] = None,
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[List[Question], int]:
-        query = db.query(Question).filter(Question.is_system == 1)
+        query = db.query(Question).options(joinedload(Question.options)).filter(Question.is_system == 1)
 
         if type:
             query = query.filter(Question.type == type)
         if difficulty:
             query = query.filter(Question.difficulty == difficulty)
+        if search:
+            query = query.filter(Question.content.contains(search))
 
-        total = query.count()
+        total = db.query(Question).filter(Question.is_system == 1).count()
         questions = query.offset((page - 1) * page_size).limit(page_size).all()
         return questions, total
 
@@ -52,7 +55,7 @@ class QuestionService:
         for opt in options:
             option = QuestionOption(
                 question_id=question.id,
-                option_key=opt["key"],
+                option_key=opt.get("option_key") or opt.get("key"),
                 content=opt["content"],
                 is_correct=opt.get("is_correct", False),
                 sort_order=opt.get("sort_order", 0),

@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class FormulaHerbBase(BaseModel):
-    herb_id: int
+    herb_id: Optional[int] = None
     herb_name: Optional[str] = None
     dosage: Optional[str] = None
     role: str = "assistant"  # chief, deputy, assistant, envoy

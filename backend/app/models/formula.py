@@ -21,7 +21,7 @@ class Formula(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    formula_herbs = relationship("FormulaHerb", back_populates="formula", cascade="all, delete-orphan")
+    herbs = relationship("FormulaHerb", back_populates="formula", cascade="all, delete-orphan")
 
 
 class FormulaHerb(Base):
@@ -30,11 +30,11 @@ class FormulaHerb(Base):
 
     id = Column(Integer, primary_key=True)
     formula_id = Column(Integer, ForeignKey("formulas.id", ondelete="CASCADE"), nullable=False, index=True)
-    herb_id = Column(Integer, ForeignKey("herbs.id"), nullable=False, index=True)
+    herb_id = Column(Integer, ForeignKey("herbs.id"), nullable=True, index=True)
     herb_name = Column(String(100), nullable=True)
     dosage = Column(String(50), nullable=True)
     role = Column(Enum('chief', 'deputy', 'assistant', 'envoy'), default='assistant')
     sort_order = Column(Integer, default=0)
     created_at = Column(DateTime, server_default=func.now())
 
-    formula = relationship("Formula", back_populates="formula_herbs")
+    formula = relationship("Formula", back_populates="herbs")

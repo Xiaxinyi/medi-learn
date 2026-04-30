@@ -47,7 +47,7 @@
         >
           <image
             class="herb-image"
-            :src="herb.images[0] || '/static/images/default-herb.png'"
+            :src="herb.images[0]?.image_url || '/static/images/default-herb.png'"
             mode="aspectFill"
           />
           <view class="herb-info">
@@ -60,7 +60,7 @@
             <view class="herb-tags">
               <text
                 class="tag"
-                v-for="attr in herb.attributes.slice(0, 4)"
+                v-for="attr in (herb.attributes || []).slice(0, 4)"
                 :key="attr.id"
                 :style="{ backgroundColor: attr.color || '#e0e0e0' }"
               >
@@ -70,6 +70,13 @@
             <text class="herb-efficacy">{{ herb.efficacy }}</text>
           </view>
         </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" v-if="!loading && herbList.length === 0">
+        <text class="empty-icon">🌿</text>
+        <text class="empty-title">暂无草药数据</text>
+        <text class="empty-desc">快去添加第一条草药记录吧</text>
       </view>
 
       <view class="loading-more" v-if="loading">
@@ -89,6 +96,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { onShow } from '@dcloudio/uni-app';
 import { useAuthStore } from '@/stores/auth';
 import { herbApi } from '@/api';
 import type { Herb } from '@/types';
@@ -120,6 +128,11 @@ async function loadHerbs(refresh = false) {
   if (loading.value) return;
   loading.value = true;
 
+  if (refresh) {
+    page.value = 1;
+    hasMore.value = true;
+  }
+
   try {
     const res = await herbApi.list({
       search: searchKeyword.value,
@@ -136,14 +149,7 @@ async function loadHerbs(refresh = false) {
 
     hasMore.value = herbList.value.length < res.total;
   } catch (e) {
-    // 模拟数据
-    herbList.value = [
-      { id: '1', name: '人参', images: [], attributes: [{ id: '1', name: '温', color: '#FF5722' }, { id: '2', name: '甘', color: '#8BC34A' }], efficacy: '大补元气，复脉固脱', indications: '体虚欲脱', dosage: '3-9g', category: '补益药', isFavorite: false, notes: [], createdAt: Date.now() },
-      { id: '2', name: '黄芪', images: [], attributes: [{ id: '3', name: '温', color: '#FF5722' }, { id: '4', name: '甘', color: '#8BC34A' }], efficacy: '补气升阳，固表止汗', indications: '气虚乏力', dosage: '9-30g', category: '补益药', isFavorite: true, notes: [], createdAt: Date.now() },
-      { id: '3', name: '当归', images: [], attributes: [{ id: '5', name: '温', color: '#FF5722' }, { id: '6', name: '甘', color: '#8BC34A' }, { id: '7', name: '辛', color: '#9C27B0' }], efficacy: '补血活血，调经止痛', indications: '血虚萎黄', dosage: '6-12g', category: '补益药', isFavorite: false, notes: [], createdAt: Date.now() },
-      { id: '4', name: '金银花', images: [], attributes: [{ id: '8', name: '寒', color: '#2196F3' }, { id: '9', name: '甘', color: '#8BC34A' }], efficacy: '清热解毒，疏散风热', indications: '痈肿疔疮', dosage: '6-15g', category: '清热药', isFavorite: false, notes: [], createdAt: Date.now() },
-      { id: '5', name: '麻黄', images: [], attributes: [{ id: '10', name: '温', color: '#FF5722' }, { id: '11', name: '辛', color: '#9C27B0' }, { id: '12', name: '微苦', color: '#FF9800' }], efficacy: '发汗解表，宣肺平喘', indications: '风寒感冒', dosage: '2-10g', category: '解表药', isFavorite: false, notes: [], createdAt: Date.now() },
-    ];
+    uni.showToast({ title: '加载失败', icon: 'none' });
   } finally {
     loading.value = false;
   }
@@ -172,6 +178,10 @@ function toggleFavorite(herb: Herb) {
 }
 
 onMounted(() => {
+  loadHerbs(true);
+});
+
+onShow(() => {
   loadHerbs(true);
 });
 </script>
@@ -305,6 +315,30 @@ onMounted(() => {
   padding: 32rpx;
   font-size: 24rpx;
   color: #999;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 48rpx;
+
+  .empty-icon {
+    font-size: 80rpx;
+    margin-bottom: 24rpx;
+  }
+
+  .empty-title {
+    font-size: 32rpx;
+    color: #666;
+    margin-bottom: 12rpx;
+  }
+
+  .empty-desc {
+    font-size: 26rpx;
+    color: #999;
+  }
 }
 
 .fab {

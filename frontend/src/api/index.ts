@@ -14,13 +14,14 @@ export const authApi = {
 
 // 草药
 export const herbApi = {
-  list: (params?: any) => api.get<PageResult<Herb>>('/api/herbs', params),
+  list: (params?: any) => api.get<PageResult<Herb>>('/api/herbs/', params),
   detail: (id: string) => api.get<Herb>(`/api/herbs/${id}`),
   create: (data: any) => api.post('/api/herbs', data),
   update: (id: string, data: any) => api.put(`/api/herbs/${id}`, data),
   delete: (id: string) => api.del(`/api/herbs/${id}`),
   favorite: (id: string) => api.post(`/api/herbs/${id}/favorite`),
   unfavorite: (id: string) => api.del(`/api/herbs/${id}/favorite`),
+  generate: (name: string) => api.post('/api/herbs/generate', null, { name }),
 };
 
 // 题库
@@ -28,6 +29,9 @@ export const questionApi = {
   list: (params?: any) => api.get<PageResult<Question>>('/api/questions', params),
   detail: (id: string) => api.get<Question>(`/api/questions/${id}`),
   random: (count: number = 10) => api.get<Question[]>('/api/questions/random', { count }),
+  create: (data: any) => api.post('/api/questions', data),
+  update: (id: string, data: any) => api.put(`/api/questions/${id}`, data),
+  delete: (id: string) => api.del(`/api/questions/${id}`),
 };
 
 // 考试
@@ -35,6 +39,7 @@ export const examApi = {
   generate: (data: any) => api.post('/api/exams/generate', data),
   submit: (data: any) => api.post('/api/exams/submit', data),
   results: () => api.get<ExamResult[]>('/api/exams/results'),
+  practice: () => api.get<Question[]>('/api/exams/practice'),
 };
 
 // 方剂
@@ -42,6 +47,9 @@ export const formulaApi = {
   list: (params?: any) => api.get<PageResult<Formula>>('/api/formulas', params),
   detail: (id: string) => api.get<Formula>(`/api/formulas/${id}`),
   byHerb: (herbId: string) => api.get<Formula[]>(`/api/formulas/by-herb/${herbId}`),
+  create: (data: any) => api.post('/api/formulas', data),
+  update: (id: string, data: any) => api.put(`/api/formulas/${id}`, data),
+  delete: (id: string) => api.del(`/api/formulas/${id}`),
 };
 
 // 反馈
@@ -64,6 +72,15 @@ export const statsApi = {
   daily: () => api.get('/api/stats/daily'),
   trend: () => api.get('/api/stats/trend'),
   accuracy: () => api.get('/api/stats/accuracy'),
+};
+
+// 管理员
+export const adminApi = {
+  listUsers: (params?: any) => api.get<any[]>('/api/admin/users', params),
+  createUser: (data: any) => api.post('/api/admin/users', data),
+  updateUserRole: (id: number, data: any) => api.put(`/api/admin/users/${id}/role`, data),
+  updateUserStatus: (id: number, data: any) => api.put(`/api/admin/users/${id}/status`, data),
+
 };
 
 // 上传

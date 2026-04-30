@@ -14,18 +14,28 @@ router = APIRouter()
 async def list_questions(
     type: Optional[str] = Query(None),
     difficulty: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
     """获取题目列表"""
-    questions, total = QuestionService.list_questions(db, type, difficulty, page, page_size)
+    questions, total = QuestionService.list_questions(db, type, difficulty, search, page, page_size)
     return {
         "items": questions,
         "total": total,
         "page": page,
         "page_size": page_size,
     }
+
+
+@router.get("/random", response_model=list[QuestionResponse])
+async def get_random_questions(
+    count: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db)
+):
+    """随机抽取题目"""
+    return QuestionService.get_random_questions(db, count)
 
 
 @router.get("/{question_id}", response_model=QuestionResponse)
@@ -81,7 +91,7 @@ async def update_question(
         for opt in options_data:
             option = QuestionOption(
                 question_id=question_id,
-                option_key=opt["key"],
+                option_key=opt.get("option_key") or opt.get("key"),
                 content=opt["content"],
                 is_correct=opt.get("is_correct", False),
                 sort_order=opt.get("sort_order", 0),
@@ -107,12 +117,3 @@ async def delete_question(
     db.delete(question)
     db.commit()
     return {"message": "删除成功"}
-
-
-@router.get("/random", response_model=list[QuestionResponse])
-async def get_random_questions(
-    count: int = Query(10, ge=1, le=50),
-    db: Session = Depends(get_db)
-):
-    """随机抽取题目"""
-    return QuestionService.get_random_questions(db, count)

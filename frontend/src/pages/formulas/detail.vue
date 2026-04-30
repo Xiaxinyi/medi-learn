@@ -50,9 +50,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { formulaApi } from '@/api';
 import type { Formula } from '@/types';
 
 const formulaId = ref('');
+const loading = ref(false);
 
 const roleText: Record<string, string> = {
   chief: '君',
@@ -73,28 +75,25 @@ function goHerb(herbId: string) {
   uni.navigateTo({ url: `/pages/herbs/detail?id=${herbId}` });
 }
 
+async function loadFormula() {
+  loading.value = true;
+  try {
+    const res = await formulaApi.detail(formulaId.value);
+    formula.value = res;
+  } catch (e) {
+    uni.showToast({ title: '加载失败', icon: 'none' });
+  } finally {
+    loading.value = false;
+  }
+}
+
 onMounted(() => {
   const pages = getCurrentPages();
   const currentPage = pages[pages.length - 1];
-  formulaId.value = currentPage.$page?.options?.id || '1';
-
-  // 模拟数据
-  formula.value = {
-    id: formulaId.value,
-    name: '四君子汤',
-    source: '《太平惠民和剂局方》',
-    category: '补益剂',
-    indications: '益气健脾。主治脾胃气虚证。面色萎白，语声低微，气短乏力，食少便溏，舌淡苔白，脉虚弱。',
-    usage: '水煎服。',
-    modifications: '若呕吐者，加半夏以降逆止呕；胸膈痞满者，加枳壳、陈皮以行气宽胸。',
-    precautions: '阴虚血热者慎用。',
-    herbs: [
-      { herbId: '1', herbName: '人参', dosage: '9g', role: 'chief' },
-      { herbId: '2', herbName: '白术', dosage: '9g', role: 'deputy' },
-      { herbId: '3', herbName: '茯苓', dosage: '9g', role: 'assistant' },
-      { herbId: '4', herbName: '炙甘草', dosage: '6g', role: 'envoy' },
-    ],
-  };
+  formulaId.value = currentPage.$page?.options?.id || '';
+  if (formulaId.value) {
+    loadFormula();
+  }
 });
 </script>
 

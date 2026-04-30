@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_
 
 from app.models.herb import Herb, HerbAttribute, HerbAttributeValue, HerbImage
@@ -15,7 +15,10 @@ class HerbService:
         page: int = 1,
         page_size: int = 20,
     ) -> tuple[List[Herb], int]:
-        query = db.query(Herb).filter(Herb.is_system == 1)
+        query = db.query(Herb).filter(Herb.is_system == 1).options(
+            joinedload(Herb.images),
+            joinedload(Herb.attribute_values).joinedload(HerbAttributeValue.attribute),
+        )
 
         if search:
             query = query.filter(
@@ -43,10 +46,34 @@ class HerbService:
 
     @staticmethod
     def create_herb(db: Session, **kwargs) -> Herb:
+        attribute_ids = kwargs.pop("attribute_ids", None)
+        image_urls = kwargs.pop("image_urls", None)
+
+        kwargs.setdefault("is_system", 1)
         herb = Herb(**kwargs)
         db.add(herb)
         db.commit()
         db.refresh(herb)
+
+        if attribute_ids:
+            for attr_id in attribute_ids:
+                attr_value = HerbAttributeValue(herb_id=herb.id, attribute_id=attr_id)
+                db.add(attr_value)
+
+        if image_urls:
+            for idx, url in enumerate(image_urls):
+                image = HerbImage(
+                    herb_id=herb.id,
+                    image_url=url,
+                    sort_order=idx,
+                    is_cover=1 if idx == 0 else 0
+                )
+                db.add(image)
+
+        if attribute_ids or image_urls:
+            db.commit()
+            db.refresh(herb)
+
         return herb
 
     @staticmethod
@@ -54,8 +81,18 @@ class HerbService:
         herb = db.query(Herb).filter(Herb.id == herb_id).first()
         if not herb:
             return None
+
+        attribute_ids = kwargs.pop("attribute_ids", None)
+
         for key, value in kwargs.items():
             setattr(herb, key, value)
+
+        if attribute_ids is not None:
+            db.query(HerbAttributeValue).filter(HerbAttributeValue.herb_id == herb_id).delete()
+            for attr_id in attribute_ids:
+                attr_value = HerbAttributeValue(herb_id=herb.id, attribute_id=attr_id)
+                db.add(attr_value)
+
         db.commit()
         db.refresh(herb)
         return herb

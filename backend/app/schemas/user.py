@@ -59,3 +59,31 @@ class TokenResponse(BaseModel):
 
 class PhoneCodeRequest(BaseModel):
     phone: str
+
+
+class AdminUserCreate(BaseModel):
+    phone: str
+    nickname: str
+    role: str = 'user'
+    password: Optional[str] = None
+
+
+class UserListItem(UserBase):
+    id: int
+    phone: Optional[str] = None
+    role: str
+    level: int = 1
+    experience: int = 0
+    status: int = 1
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserRoleUpdate(BaseModel):
+    role: str
+
+
+class UserStatusUpdate(BaseModel):
+    status: int

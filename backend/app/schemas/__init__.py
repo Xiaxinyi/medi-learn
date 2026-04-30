@@ -1,3 +1,4 @@
+from app.schemas.common import *
 from app.schemas.user import *
 from app.schemas.herb import *
 from app.schemas.question import *

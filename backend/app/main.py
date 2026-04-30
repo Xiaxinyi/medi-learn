@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.database import engine, Base
-from app.api import auth, herbs, questions, exams, stats, formulas, feedback, levels, upload
+from app.api import auth, herbs, questions, exams, stats, formulas, feedback, levels, upload, admin
 
 
 @asynccontextmanager
@@ -42,6 +42,7 @@ app.include_router(formulas.router, prefix="/api/formulas", tags=["方剂"])
 app.include_router(feedback.router, prefix="/api/feedback", tags=["反馈"])
 app.include_router(levels.router, prefix="/api/levels", tags=["等级"])
 app.include_router(upload.router, prefix="/api/upload", tags=["上传"])
+app.include_router(admin.router, prefix="/api/admin", tags=["管理员"])
 
 
 @app.get("/health")

@@ -83,7 +83,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
+import { herbApi } from '@/api';
+
+const herbId = ref<string>('');
+const isEdit = ref(false);
 
 const categories = ['解表药', '清热药', '泻下药', '祛风湿药', '化湿药', '利水渗湿药', '温里药', '理气药', '消食药', '驱虫药', '止血药', '活血化瘀药', '化痰止咳平喘药', '安神药', '平肝息风药', '开窍药', '补益药', '收涩药', '涌吐药', '攻毒杀虫止痒药', '拔毒化腐生肌药'];
 const categoryIndex = ref(0);
@@ -155,7 +159,7 @@ function removeImage(index: number) {
   form.images.splice(index, 1);
 }
 
-function submit() {
+async function submit() {
   if (!form.name || !form.efficacy || !form.indications) {
     uni.showToast({ title: '请填写必填项', icon: 'none' });
     return;
@@ -164,14 +168,61 @@ function submit() {
   if (aliasInput.value) {
     form.aliases = aliasInput.value.split('、').map(s => s.trim()).filter(Boolean);
   }
-
   form.attributes = selectedAttributes.value;
 
-  uni.showToast({ title: '保存成功', icon: 'success' });
-  setTimeout(() => {
-    uni.navigateBack();
-  }, 1500);
+  try {
+    const payload = {
+      name: form.name,
+      latin_name: form.latinName,
+      aliases: form.aliases,
+      category: form.category,
+      attributes: form.attributes,
+      efficacy: form.efficacy,
+      indications: form.indications,
+      dosage: form.dosage,
+      contraindications: form.contraindications,
+      origin: form.origin,
+      images: form.images,
+    };
+    if (isEdit.value) {
+      await herbApi.update(herbId.value, payload);
+    } else {
+      await herbApi.create(payload);
+    }
+    uni.showToast({ title: '保存成功', icon: 'success' });
+    setTimeout(() => {
+      uni.navigateBack();
+    }, 1500);
+  } catch (e) {
+    uni.showToast({ title: '保存失败', icon: 'none' });
+  }
 }
+
+onMounted(() => {
+  const pages = getCurrentPages();
+  const current = pages[pages.length - 1] as any;
+  if (current?.options?.id) {
+    herbId.value = current.options.id;
+    isEdit.value = true;
+    herbApi.detail(herbId.value).then((res: any) => {
+      form.name = res.name || '';
+      form.latinName = res.latin_name || '';
+      form.aliases = res.aliases || [];
+      aliasInput.value = form.aliases.join('、');
+      form.category = res.category || '';
+      categoryIndex.value = categories.indexOf(form.category);
+      form.efficacy = res.efficacy || '';
+      form.indications = res.indications || '';
+      form.dosage = res.dosage || '';
+      form.contraindications = res.contraindications || '';
+      form.origin = res.origin || '';
+      form.images = res.images || [];
+      selectedAttributes.value = res.attributes || [];
+    }).catch(() => {
+      uni.showToast({ title: '加载失败', icon: 'none' });
+    });
+  }
+});
 </script>
 
 <style lang="scss" scoped>
@@ -287,7 +338,6 @@ function submit() {
 
 .submit-btn {
   height: 96rpx;
-  line-height: 96rpx;
   background: #2B9939;
   color: #fff;
   border-radius: 48rpx;

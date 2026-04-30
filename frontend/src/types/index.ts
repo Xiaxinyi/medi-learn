@@ -26,6 +26,15 @@ export interface AttributeTag {
   color?: string;
 }
 
+export interface HerbImage {
+  id: string;
+  image_url: string;
+  thumbnail_url?: string;
+  sort_order: number;
+  is_cover: number;
+  created_at?: number;
+}
+
 export interface Herb {
   id: string;
   name: string;
@@ -36,7 +45,7 @@ export interface Herb {
   indications: string;
   dosage: string;
   contraindications?: string;
-  images: string[];
+  images: HerbImage[];
   category: string;
   origin?: string;
   isFavorite: boolean;
@@ -64,6 +73,7 @@ export interface Question {
 
 export interface Option {
   id: string;
+  option_key: string;
   content: string;
 }
 

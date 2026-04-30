@@ -4,7 +4,9 @@ from typing import Optional, List
 
 from app.database import get_db
 from app.schemas.herb import HerbCreate, HerbUpdate, HerbResponse, HerbListResponse, HerbAttributeCreate, HerbAttributeResponse
+from app.schemas.common import PageResult
 from app.services.herb_service import HerbService
+from app.services.ai_service import AIService
 from app.middleware.auth_middleware import get_current_user, get_current_admin
 
 router = APIRouter()
@@ -31,7 +33,7 @@ async def create_attribute(
     return attr
 
 
-@router.get("/")
+@router.get("/", response_model=PageResult[HerbResponse])
 async def list_herbs(
     search: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
@@ -48,6 +50,27 @@ async def list_herbs(
         "page": page,
         "page_size": page_size,
     }
+
+
+@router.post("/generate")
+async def generate_herb_info(
+    name: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin)
+):
+    """AI生成草药信息（admin）"""
+    categories = [
+        '解表药', '清热药', '泻下药', '祛风湿药', '化湿药', '利水渗湿药',
+        '温里药', '理气药', '消食药', '驱虫药', '止血药', '活血化瘀药',
+        '化痰止咳平喘药', '安神药', '平肝息风药', '开窍药', '补益药', '收涩药'
+    ]
+    try:
+        result = await AIService.generate_herb_info(name, categories)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI生成失败: {str(e)}")
 
 
 @router.get("/{herb_id}", response_model=HerbResponse)

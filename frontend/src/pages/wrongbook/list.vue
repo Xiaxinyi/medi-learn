@@ -272,7 +272,6 @@ function startReview() {
 
   .review-btn {
     height: 88rpx;
-    line-height: 88rpx;
     background: #2B9939;
     color: #fff;
     border-radius: 44rpx;

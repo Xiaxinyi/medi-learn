@@ -4,10 +4,16 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config import settings
 
+# TiDB Serverless 公共端点需要 TLS 连接
+connect_args = {}
+if "tidbcloud.com" in settings.DATABASE_URL:
+    connect_args["ssl"] = {"ca": "/etc/ssl/cert.pem"}
+
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
     pool_recycle=300,
+    connect_args=connect_args,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

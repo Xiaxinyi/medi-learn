@@ -13,15 +13,15 @@
         <view
           class="option-item"
           v-for="option in currentQuestion.options"
-          :key="option.id"
+          :key="option.option_key"
           :class="{
-            selected: selectedAnswers.includes(option.id),
-            correct: showResult && currentQuestion.correctAnswers.includes(option.id),
-            wrong: showResult && selectedAnswers.includes(option.id) && !currentQuestion.correctAnswers.includes(option.id),
+            selected: selectedAnswers.includes(option.option_key),
+            correct: showResult && currentQuestion.correctAnswers.includes(option.option_key),
+            wrong: showResult && selectedAnswers.includes(option.option_key) && !currentQuestion.correctAnswers.includes(option.option_key),
           }"
-          @click="selectOption(option.id)"
+          @click="selectOption(option.option_key)"
         >
-          <text class="option-key">{{ option.id }}</text>
+          <text class="option-key">{{ option.option_key }}</text>
           <text class="option-content">{{ option.content }}</text>
         </view>
       </view>
@@ -39,8 +39,14 @@
       </view>
     </view>
 
+    <!-- 空状态 -->
+    <view class="empty-state" v-else>
+      <text class="empty-text">暂无练习题</text>
+      <text class="empty-subtext">您已完成所有题目，请稍后再来</text>
+    </view>
+
     <!-- 底部操作栏 -->
-    <view class="bottom-bar">
+    <view class="bottom-bar" v-if="currentQuestion">
       <button
         class="submit-btn"
         v-if="!showResult && selectedAnswers.length > 0"
@@ -68,7 +74,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { questionApi } from '@/api';
+import { examApi } from '@/api';
 import type { Question } from '@/types';
 
 const questions = ref<Question[]>([]);
@@ -77,6 +83,7 @@ const selectedAnswers = ref<string[]>([]);
 const showResult = ref(false);
 const isCorrect = ref(false);
 const score = ref(0);
+const answersHistory = ref<{ questionId: string; answers: string[] }[]>([]);
 
 const currentQuestion = computed(() => questions.value[currentIndex.value] || null);
 
@@ -113,6 +120,11 @@ function submitAnswer() {
     score.value += currentQuestion.value.type === 'single' ? 10 : 15;
   }
 
+  answersHistory.value.push({
+    questionId: String(currentQuestion.value.id),
+    answers: [...selected],
+  });
+
   showResult.value = true;
 }
 
@@ -123,7 +135,18 @@ function nextQuestion() {
   isCorrect.value = false;
 }
 
-function finishPractice() {
+async function finishPractice() {
+  try {
+    await examApi.submit({
+      answers: answersHistory.value.map(a => ({
+        question_id: a.questionId,
+        answers: a.answers,
+      })),
+    });
+  } catch (e) {
+    console.error('提交练习结果失败', e);
+  }
+
   uni.showModal({
     title: '练习完成',
     content: `本次练习得分：${score.value}分`,
@@ -136,56 +159,11 @@ function finishPractice() {
 
 async function loadQuestions() {
   try {
-    const res = await questionApi.random(10);
+    const res = await examApi.practice();
     questions.value = res;
   } catch (e) {
-    questions.value = [
-      {
-        id: '1',
-        type: 'single',
-        content: '人参的主要功效是什么？',
-        options: [
-          { id: 'A', content: '清热解毒' },
-          { id: 'B', content: '大补元气' },
-          { id: 'C', content: '活血化瘀' },
-          { id: 'D', content: '利尿消肿' },
-        ],
-        correctAnswers: ['B'],
-        explanation: '人参性味甘、微苦，微温，归脾、肺、心、肾经，具有大补元气、复脉固脱、补脾益肺、生津养血、安神益智的功效。',
-        difficulty: 'easy',
-        tags: ['人参', '功效'],
-      },
-      {
-        id: '2',
-        type: 'multiple',
-        content: '下列哪些是黄芪的功效？（多选）',
-        options: [
-          { id: 'A', content: '补气升阳' },
-          { id: 'B', content: '固表止汗' },
-          { id: 'C', content: '利水消肿' },
-          { id: 'D', content: '托毒生肌' },
-        ],
-        correctAnswers: ['A', 'B', 'C', 'D'],
-        explanation: '黄芪性味甘，微温，归脾、肺经，具有补气升阳、固表止汗、利水消肿、生津养血、行滞通痹、托毒排脓、敛疮生肌的功效。',
-        difficulty: 'medium',
-        tags: ['黄芪', '功效'],
-      },
-      {
-        id: '3',
-        type: 'single',
-        content: '当归主治什么病症？',
-        options: [
-          { id: 'A', content: '风寒感冒' },
-          { id: 'B', content: '血虚萎黄' },
-          { id: 'C', content: '湿热黄疸' },
-          { id: 'D', content: '咽喉肿痛' },
-        ],
-        correctAnswers: ['B'],
-        explanation: '当归性味甘、辛，温，归肝、心、脾经，具有补血活血、调经止痛、润肠通便的功效，主治血虚萎黄、眩晕心悸、月经不调、经闭痛经等。',
-        difficulty: 'easy',
-        tags: ['当归', '主治'],
-      },
-    ];
+    uni.showToast({ title: '获取题目失败', icon: 'none' });
+    questions.value = [];
   }
 }
 
@@ -197,7 +175,7 @@ loadQuestions();
   min-height: 100vh;
   background: #f5f5f5;
   padding: 24rpx;
-  padding-bottom: 160rpx;
+  padding-bottom: 280rpx;
 }
 
 .question-card {
@@ -328,18 +306,40 @@ loadQuestions();
   }
 }
 
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 48rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  margin-top: 48rpx;
+
+  .empty-text {
+    font-size: 32rpx;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 16rpx;
+  }
+
+  .empty-subtext {
+    font-size: 28rpx;
+    color: #999;
+  }
+}
+
 .bottom-bar {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 100rpx;
   padding: 24rpx 48rpx;
   background: #fff;
   box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
 
   .submit-btn, .next-btn, .finish-btn {
     height: 88rpx;
-    line-height: 88rpx;
     border-radius: 44rpx;
     font-size: 32rpx;
     color: #fff;

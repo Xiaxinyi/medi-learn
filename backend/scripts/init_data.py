@@ -90,14 +90,15 @@ def init_admin_user(db):
     admin = db.query(User).filter(User.role == "admin").first()
     if not admin:
         admin = User(
-            phone="admin",
+            phone="13800000000",
             nickname="管理员",
             role="admin",
             status=1,
+            password_hash=get_password_hash("admin123"),
         )
         db.add(admin)
         db.commit()
-        print("已创建管理员用户")
+        print("已创建管理员用户: 手机号 13800000000, 默认密码 admin123")
 
 
 def main():

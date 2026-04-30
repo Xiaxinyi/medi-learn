@@ -249,7 +249,6 @@ function submit() {
 
 .submit-btn {
   height: 96rpx;
-  line-height: 96rpx;
   background: #2B9939;
   color: #fff;
   border-radius: 48rpx;

@@ -45,6 +45,7 @@ async def create_formula(
 ):
     """添加方剂（admin）"""
     from app.models.formula import Formula, FormulaHerb
+    from app.models.herb import Herb
     formula = Formula(
         name=data.name,
         source=data.source,
@@ -53,15 +54,21 @@ async def create_formula(
         usage=data.usage,
         modifications=data.modifications,
         precautions=data.precautions,
+        is_system=1,
     )
     db.add(formula)
     db.commit()
     db.refresh(formula)
 
     for herb in data.herbs:
+        herb_id = herb.herb_id
+        if herb_id is None and herb.herb_name:
+            h = db.query(Herb).filter(Herb.name == herb.herb_name).first()
+            if h:
+                herb_id = h.id
         fh = FormulaHerb(
             formula_id=formula.id,
-            herb_id=herb.herb_id,
+            herb_id=herb_id or 0,
             herb_name=herb.herb_name,
             dosage=herb.dosage,
             role=herb.role,
@@ -82,6 +89,7 @@ async def update_formula(
 ):
     """更新方剂（admin）"""
     from app.models.formula import Formula, FormulaHerb
+    from app.models.herb import Herb
     formula = db.query(Formula).filter(Formula.id == formula_id).first()
     if not formula:
         raise HTTPException(status_code=404, detail="方剂不存在")
@@ -95,9 +103,14 @@ async def update_formula(
     if herbs_data:
         db.query(FormulaHerb).filter(FormulaHerb.formula_id == formula_id).delete()
         for herb in herbs_data:
+            herb_id = herb.get("herb_id")
+            if herb_id is None and herb.get("herb_name"):
+                h = db.query(Herb).filter(Herb.name == herb["herb_name"]).first()
+                if h:
+                    herb_id = h.id
             fh = FormulaHerb(
                 formula_id=formula_id,
-                herb_id=herb["herb_id"],
+                herb_id=herb_id or 0,
                 herb_name=herb.get("herb_name"),
                 dosage=herb.get("dosage"),
                 role=herb.get("role", "assistant"),

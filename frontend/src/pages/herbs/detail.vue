@@ -3,7 +3,7 @@
     <!-- 图片轮播 -->
     <swiper class="image-swiper" indicator-dots circular>
       <swiper-item v-for="(img, index) in herb.images" :key="index">
-        <image :src="img" mode="aspectFill" />
+        <image :src="img.image_url" mode="aspectFill" />
       </swiper-item>
       <swiper-item v-if="herb.images.length === 0">
         <image src="/static/images/default-herb.png" mode="aspectFill" />
@@ -166,32 +166,7 @@ async function loadData() {
     const res = await herbApi.detail(herbId.value);
     herb.value = res;
   } catch (e) {
-    // 模拟数据
-    herb.value = {
-      id: herbId.value,
-      name: '人参',
-      latinName: 'Radix et Rhizoma Ginseng',
-      aliases: ['棒槌', '地精', '神草'],
-      attributes: [
-        { id: '1', name: '温', groupName: '四气', color: '#FF5722' },
-        { id: '2', name: '甘', groupName: '五味', color: '#8BC34A' },
-        { id: '3', name: '微苦', groupName: '五味', color: '#FF9800' },
-        { id: '4', name: '升', groupName: '升降浮沉', color: '#E91E63' },
-        { id: '5', name: '补', groupName: '补泻', color: '#9C27B0' },
-      ],
-      efficacy: '大补元气，复脉固脱，补脾益肺，生津养血，安神益智。',
-      indications: '用于体虚欲脱，肢冷脉微，脾虚食少，肺虚喘咳，津伤口渴，内热消渴，气血亏虚，久病虚羸，惊悸失眠，阳痿宫冷。',
-      dosage: '3～9g，另煎兑服；也可研末吞服，一次2g，一日2次。',
-      contraindications: '实热证、湿热证及正气不虚者禁服。反藜芦。',
-      images: [],
-      category: '补益药',
-      origin: '吉林、辽宁、黑龙江',
-      isFavorite: false,
-      notes: [
-        { id: '1', content: '人参是补气第一要药，适合气虚体质人群。', createdAt: Date.now() - 86400000 },
-      ],
-      createdAt: Date.now(),
-    };
+    uni.showToast({ title: '加载失败', icon: 'none' });
   }
 
   try {
@@ -391,12 +366,10 @@ onMounted(() => {
   .add-btn {
     width: 120rpx;
     height: 72rpx;
-    line-height: 72rpx;
     background: #2B9939;
     color: #fff;
     border-radius: 12rpx;
     font-size: 26rpx;
-    padding: 0;
   }
 }
 </style>

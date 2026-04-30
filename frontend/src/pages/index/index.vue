@@ -68,11 +68,11 @@
           :key="herb.id"
           @click="navigateTo(`/pages/herbs/detail?id=${herb.id}`)"
         >
-          <image class="herb-image" :src="herb.images[0] || '/static/images/default-herb.png'" mode="aspectFill" />
+          <image class="herb-image" :src="herb.images[0]?.image_url || '/static/images/default-herb.png'" mode="aspectFill" />
           <view class="herb-info">
             <text class="herb-name">{{ herb.name }}</text>
             <view class="herb-tags">
-              <text class="tag" v-for="attr in herb.attributes.slice(0, 3)" :key="attr.id" :style="{ backgroundColor: attr.color || '#e0e0e0' }">
+              <text class="tag" v-for="attr in (herb.attributes || []).slice(0, 3)" :key="attr.id" :style="{ backgroundColor: attr.color || '#e0e0e0' }">
                 {{ attr.name }}
               </text>
             </view>
@@ -92,11 +92,31 @@
           <view
             class="option-item"
             v-for="option in dailyQuestion.options"
-            :key="option.id"
-            @click="selectOption(option.id)"
+            :key="option.option_key"
+            :class="{
+              correct: dailyAnswered && dailyQuestion.correctAnswers?.includes(option.option_key),
+              wrong: dailyAnswered && dailySelected === option.option_key && !dailyQuestion.correctAnswers?.includes(option.option_key),
+            }"
+            @click="selectOption(option.option_key)"
           >
-            <text class="option-key">{{ option.id }}</text>
+            <text class="option-key">{{ option.option_key }}</text>
             <text class="option-content">{{ option.content }}</text>
+          </view>
+        </view>
+
+        <!-- 答案解析 -->
+        <view class="answer-result" v-if="dailyAnswered">
+          <view class="result-header">
+            <text :class="dailyIsCorrect ? 'result-correct' : 'result-wrong'">
+              {{ dailyIsCorrect ? '回答正确 ✓' : '回答错误 ✗' }}
+            </text>
+            <text class="correct-answer">
+              正确答案：{{ dailyQuestion.correctAnswers?.join('、') }}
+            </text>
+          </view>
+          <view class="explanation-box" v-if="dailyQuestion.explanation">
+            <text class="explanation-title">答案解析</text>
+            <text class="explanation-text">{{ dailyQuestion.explanation }}</text>
           </view>
         </view>
       </view>
@@ -107,7 +127,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
-import { herbApi, questionApi } from '@/api';
+import { herbApi, questionApi, statsApi } from '@/api';
 import type { Herb, Question } from '@/types';
 
 const authStore = useAuthStore();
@@ -115,13 +135,37 @@ const authStore = useAuthStore();
 const todayStats = ref({ herbs: 0, questions: 0, correct: 0, streak: 0 });
 const recommendedHerbs = ref<Herb[]>([]);
 const dailyQuestion = ref<Question | null>(null);
+const dailyAnswered = ref(false);
+const dailySelected = ref<string | null>(null);
+const dailyIsCorrect = ref(false);
 
 function navigateTo(url: string) {
-  uni.navigateTo({ url });
+  const tabBarPaths = ['/pages/index/index', '/pages/herbs/list', '/pages/quiz/practice', '/pages/profile/index'];
+  if (tabBarPaths.includes(url)) {
+    uni.switchTab({ url });
+  } else {
+    uni.navigateTo({ url });
+  }
 }
 
 function selectOption(optionId: string) {
-  uni.showToast({ title: `选择了 ${optionId}`, icon: 'none' });
+  if (dailyAnswered.value || !dailyQuestion.value) return;
+
+  dailySelected.value = optionId;
+  dailyAnswered.value = true;
+
+  const correctAnswers = dailyQuestion.value.correctAnswers || [];
+  if (dailyQuestion.value.type === 'single') {
+    dailyIsCorrect.value = correctAnswers.length > 0 && optionId === correctAnswers[0];
+  } else {
+    dailyIsCorrect.value = correctAnswers.includes(optionId);
+  }
+
+  if (dailyIsCorrect.value) {
+    uni.showToast({ title: '回答正确！', icon: 'success' });
+  } else {
+    uni.showToast({ title: '回答错误', icon: 'none' });
+  }
 }
 
 async function loadData() {
@@ -129,41 +173,31 @@ async function loadData() {
     const herbsRes = await herbApi.list({ page_size: 6 });
     recommendedHerbs.value = herbsRes.items || [];
   } catch (e) {
-    // 使用模拟数据
-    recommendedHerbs.value = [
-      { id: '1', name: '人参', images: [], attributes: [{ id: '1', name: '温', color: '#FF5722' }, { id: '2', name: '甘', color: '#8BC34A' }], efficacy: '大补元气', indications: '体虚欲脱', dosage: '3-9g', category: '补益药', isFavorite: false, notes: [], createdAt: Date.now() },
-      { id: '2', name: '黄芪', images: [], attributes: [{ id: '3', name: '温', color: '#FF5722' }, { id: '4', name: '甘', color: '#8BC34A' }], efficacy: '补气升阳', indications: '气虚乏力', dosage: '9-30g', category: '补益药', isFavorite: false, notes: [], createdAt: Date.now() },
-      { id: '3', name: '当归', images: [], attributes: [{ id: '5', name: '温', color: '#FF5722' }, { id: '6', name: '甘', color: '#8BC34A' }, { id: '7', name: '辛', color: '#9C27B0' }], efficacy: '补血活血', indications: '血虚萎黄', dosage: '6-12g', category: '补益药', isFavorite: false, notes: [], createdAt: Date.now() },
-    ];
+    recommendedHerbs.value = [];
   }
 
   try {
     const questionsRes = await questionApi.random(1);
     dailyQuestion.value = questionsRes[0] || null;
   } catch (e) {
-    dailyQuestion.value = {
-      id: '1',
-      type: 'single',
-      content: '人参的主要功效是什么？',
-      options: [
-        { id: 'A', content: '清热解毒' },
-        { id: 'B', content: '大补元气' },
-        { id: 'C', content: '活血化瘀' },
-        { id: 'D', content: '利尿消肿' },
-      ],
-      correctAnswers: ['B'],
-      explanation: '人参性味甘、微苦，微温，归脾、肺、心、肾经，具有大补元气、复脉固脱、补脾益肺、生津养血、安神益智的功效。',
-      difficulty: 'easy',
-      tags: ['人参', '功效'],
+    dailyQuestion.value = null;
+  }
+
+  try {
+    const dailyRes = await statsApi.daily();
+    todayStats.value = {
+      herbs: 0,
+      questions: dailyRes.answered || 0,
+      correct: dailyRes.correct || 0,
+      streak: authStore.user?.streakDays || 0,
     };
+  } catch (e) {
+    todayStats.value = { herbs: 0, questions: 0, correct: 0, streak: authStore.user?.streakDays || 0 };
   }
 }
 
 onMounted(() => {
   loadData();
-  if (authStore.isLoggedIn) {
-    todayStats.value.streak = authStore.user?.streakDays || 0;
-  }
 });
 </script>
 
@@ -410,6 +444,77 @@ onMounted(() => {
     .option-content {
       font-size: 28rpx;
       color: #333;
+    }
+
+    &.correct {
+      background: #E8F5E9;
+      border: 2rpx solid #4CAF50;
+
+      .option-key {
+        background: #4CAF50;
+      }
+    }
+
+    &.wrong {
+      background: #FFEBEE;
+      border: 2rpx solid #F44336;
+
+      .option-key {
+        background: #F44336;
+      }
+    }
+  }
+
+  .answer-result {
+    margin-top: 32rpx;
+    padding: 24rpx;
+    background: #FFF8E1;
+    border-radius: 16rpx;
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16rpx;
+
+      .result-correct {
+        font-size: 30rpx;
+        font-weight: bold;
+        color: #4CAF50;
+      }
+
+      .result-wrong {
+        font-size: 30rpx;
+        font-weight: bold;
+        color: #F44336;
+      }
+
+      .correct-answer {
+        font-size: 26rpx;
+        color: #4CAF50;
+        font-weight: bold;
+      }
+    }
+
+    .explanation-box {
+      margin-top: 16rpx;
+      padding-top: 16rpx;
+      border-top: 2rpx solid rgba(0, 0, 0, 0.06);
+
+      .explanation-title {
+        font-size: 28rpx;
+        font-weight: bold;
+        color: #333;
+        display: block;
+        margin-bottom: 12rpx;
+      }
+
+      .explanation-text {
+        font-size: 26rpx;
+        color: #666;
+        line-height: 1.6;
+        display: block;
+      }
     }
   }
 }

@@ -27,7 +27,7 @@
             type="number"
             v-model="code"
             placeholder="请输入验证码"
-            maxlength="6"
+            maxlength="8"
           />
           <button
             class="code-btn"
@@ -53,8 +53,10 @@
       </button>
     </view>
 
-    <view class="agreement">
-      <checkbox :checked="agreed" @click="agreed = !agreed" />
+    <view class="agreement" @click="agreed = !agreed">
+      <checkbox-group @change="onAgreementChange">
+        <checkbox value="agreed" :checked="agreed" />
+      </checkbox-group>
       <text class="agreement-text">
         我已阅读并同意
         <text class="link">《用户协议》</text>
@@ -123,6 +125,10 @@ async function login() {
   } catch (e) {
     uni.showToast({ title: '登录失败', icon: 'none' });
   }
+}
+
+function onAgreementChange(e: any) {
+  agreed.value = e.detail.value.includes('agreed');
 }
 
 function loginWithWechat() {
@@ -197,12 +203,10 @@ function loginWithWechat() {
     .code-btn {
       width: 200rpx;
       height: 88rpx;
-      line-height: 88rpx;
       background: #2B9939;
       color: #fff;
       border-radius: 16rpx;
       font-size: 24rpx;
-      padding: 0;
 
       &[disabled] {
         background: #ccc;
@@ -212,7 +216,6 @@ function loginWithWechat() {
 
   .login-btn {
     height: 96rpx;
-    line-height: 96rpx;
     background: #2B9939;
     color: #fff;
     border-radius: 48rpx;
@@ -240,14 +243,10 @@ function loginWithWechat() {
 
   .wechat-btn {
     height: 96rpx;
-    line-height: 96rpx;
     background: #07C160;
     color: #fff;
     border-radius: 48rpx;
     font-size: 32rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     gap: 16rpx;
 
     .wechat-icon {

@@ -8,6 +8,15 @@ interface RequestOptions {
   header?: Record<string, string>;
 }
 
+function buildUrl(url: string, params?: any): string {
+  if (!params) return url;
+  const query = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    .join('&');
+  return query ? `${url}?${query}` : url;
+}
+
 export function request<T = any>(options: RequestOptions): Promise<T> {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync('token');
@@ -19,8 +28,10 @@ export function request<T = any>(options: RequestOptions): Promise<T> {
       header['Authorization'] = `Bearer ${token}`;
     }
 
+    const url = buildUrl(`${BASE_URL}${options.url}`, options.params);
+
     uni.request({
-      url: `${BASE_URL}${options.url}`,
+      url,
       method: options.method || 'GET',
       data: options.data,
       header,
@@ -45,7 +56,7 @@ export function request<T = any>(options: RequestOptions): Promise<T> {
 
 export const api = {
   get: <T = any>(url: string, params?: any) => request<T>({ url, method: 'GET', params }),
-  post: <T = any>(url: string, data?: any) => request<T>({ url, method: 'POST', data }),
+  post: <T = any>(url: string, data?: any, params?: any) => request<T>({ url, method: 'POST', data, params }),
   put: <T = any>(url: string, data?: any) => request<T>({ url, method: 'PUT', data }),
   del: <T = any>(url: string) => request<T>({ url, method: 'DELETE' }),
 };

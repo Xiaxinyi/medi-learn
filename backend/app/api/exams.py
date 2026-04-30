@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from datetime import datetime
 
 from app.database import get_db
 from app.schemas.exam import ExamGenerateRequest, ExamStartRequest, ExamSubmitRequest, ExamResultResponse
-from app.schemas.question import AnswerSubmit, AnswerResult
+from app.schemas.question import AnswerSubmit, AnswerResult, QuestionResponse
 from app.services.question_service import QuestionService
 from app.services.level_service import LevelService
 from app.middleware.auth_middleware import get_current_user
@@ -178,6 +178,59 @@ async def get_exam_result(
     result = db.query(ExamResult).filter(ExamResult.id == result_id, ExamResult.user_id == current_user.id).first()
     if not result:
         raise HTTPException(status_code=404, detail="成绩不存在")
+    return result
+
+
+@router.get("/practice", response_model=list[QuestionResponse])
+async def get_practice_questions(
+    count: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """获取练习题目：优先未做过的题，不足则从错题本补足"""
+    import random
+
+    # 1. 获取用户已做过的题目ID
+    answered_ids = db.query(AnswerRecord.question_id).filter(
+        AnswerRecord.user_id == current_user.id
+    ).distinct().all()
+    answered_ids = {r[0] for r in answered_ids}
+
+    # 2. 获取未做过的系统题目
+    query = db.query(Question).options(joinedload(Question.options)).filter(Question.is_system == 1)
+    if answered_ids:
+        query = query.filter(~Question.id.in_(answered_ids))
+
+    unanswered = query.all()
+    if len(unanswered) > count:
+        unanswered = random.sample(unanswered, count)
+
+    result = list(unanswered)
+    remaining = count - len(result)
+
+    # 3. 不足则从错题本（未掌握）按 wrong_count 降序补足
+    if remaining > 0:
+        wrong_entries = db.query(WrongAnswer).filter(
+            WrongAnswer.user_id == current_user.id,
+            WrongAnswer.is_mastered == 0,
+        ).order_by(WrongAnswer.wrong_count.desc()).all()
+
+        existing_ids = {q.id for q in result}
+        seen = set()
+        additional_qids = []
+        for w in wrong_entries:
+            if w.question_id not in seen and w.question_id not in existing_ids:
+                seen.add(w.question_id)
+                additional_qids.append(w.question_id)
+                if len(additional_qids) >= remaining:
+                    break
+
+        if additional_qids:
+            additional = db.query(Question).options(joinedload(Question.options)).filter(
+                Question.id.in_(additional_qids)
+            ).all()
+            result.extend(additional)
+
     return result
 
 
