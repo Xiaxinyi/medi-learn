@@ -28,6 +28,44 @@ class AIService:
             f'\n只返回纯JSON对象，不要markdown代码块，不要其他说明。'
         )
 
+        return await AIService._call_ai(system_prompt, user_prompt)
+
+    @staticmethod
+    async def generate_question_info(topic: str) -> dict:
+        """根据题目主题调用AI生成完整试题"""
+        if not settings.OPENAI_API_KEY:
+            raise ValueError("AI服务未配置，请设置 OPENAI_API_KEY")
+
+        system_prompt = (
+            "你是一位中医考试命题专家。请根据给定的知识点主题，生成一道高质量的中医考试题目。"
+            "必须以JSON格式返回，不要包含任何其他说明文字。"
+        )
+
+        user_prompt = (
+            f'请为主题"{topic}"生成一道中医考试题。以JSON格式返回，字段要求如下：\n'
+            f'- content: 题目内容（字符串，清晰的题干）\n'
+            f'- type: 题型，"single"（单选）或"multiple"（多选）\n'
+            f'- options: 选项数组，固定4个选项，每个选项包含：\n'
+            f'  - option_key: 选项标识，依次为 "A"、"B"、"C"、"D"\n'
+            f'  - content: 选项内容（字符串）\n'
+            f'  - is_correct: 是否正确（布尔值）\n'
+            f'  - sort_order: 排序，依次为 0、1、2、3\n'
+            f'- explanation: 答案解析（字符串，详细说明为什么选这个答案）\n'
+            f'- difficulty: 难度，从 "easy"（简单）、"medium"（中等）、"hard"（困难）中选择\n'
+            f'- tags: 标签数组（字符串数组，如 ["解表药","清热药"]）\n'
+            f'\n要求：\n'
+            f'1. 单选题必须有且仅有1个正确答案\n'
+            f'2. 多选题必须有2-3个正确答案\n'
+            f'3. 选项内容要有区分度，不能过于简单\n'
+            f'4. 解析要专业、详细\n'
+            f'\n只返回纯JSON对象，不要markdown代码块，不要其他说明。'
+        )
+
+        return await AIService._call_ai(system_prompt, user_prompt)
+
+    @staticmethod
+    async def _call_ai(system_prompt: str, user_prompt: str) -> dict:
+        """调用AI API的通用方法"""
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
                 f"{settings.OPENAI_BASE_URL}/chat/completions",

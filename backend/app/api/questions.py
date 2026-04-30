@@ -5,6 +5,7 @@ from typing import Optional
 from app.database import get_db
 from app.schemas.question import QuestionCreate, QuestionUpdate, QuestionResponse, QuestionListResponse
 from app.services.question_service import QuestionService
+from app.services.ai_service import AIService
 from app.middleware.auth_middleware import get_current_admin
 
 router = APIRouter()
@@ -36,6 +37,22 @@ async def get_random_questions(
 ):
     """随机抽取题目"""
     return QuestionService.get_random_questions(db, count)
+
+
+@router.post("/generate")
+async def generate_question_info(
+    topic: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_admin)
+):
+    """AI生成试题（admin）"""
+    try:
+        result = await AIService.generate_question_info(topic)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI生成失败: {str(e)}")
 
 
 @router.get("/{question_id}", response_model=QuestionResponse)

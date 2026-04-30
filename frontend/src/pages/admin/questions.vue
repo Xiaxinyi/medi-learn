@@ -43,7 +43,12 @@
         <view class="form-body">
           <view class="form-item">
             <text class="form-label">题目内容</text>
-            <textarea class="form-textarea" v-model="form.content" placeholder="请输入题目内容" />
+            <view class="form-input-wrap">
+              <textarea class="form-textarea flex-1" v-model="form.content" placeholder="请输入题目内容或知识点主题" />
+              <button class="ai-btn" @click="generateByAI" :disabled="aiLoading || !form.content">
+                {{ aiLoading ? '生成中...' : 'AI生成' }}
+              </button>
+            </view>
           </view>
           <view class="form-item">
             <text class="form-label">题型</text>
@@ -93,6 +98,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { questionApi } from '@/api';
+
+const aiLoading = ref(false);
 
 const questions = ref<any[]>([]);
 const loading = ref(false);
@@ -226,6 +233,47 @@ function resetForm() {
   form.tags = [];
   tagInput.value = '';
   difficultyIndex.value = 0;
+}
+
+async function generateByAI() {
+  if (!form.content) {
+    uni.showToast({ title: '请先输入题目内容或知识点主题', icon: 'none' });
+    return;
+  }
+  aiLoading.value = true;
+  try {
+    const res = await questionApi.generate(form.content);
+    if (res.content) form.content = res.content;
+    if (res.type) form.type = res.type;
+    if (res.options && Array.isArray(res.options)) {
+      const keys = ['A', 'B', 'C', 'D'];
+      form.options = keys.map((k, idx) => {
+        const opt = res.options.find((o: any) => (o.option_key || o.key) === k);
+        return {
+          id: k,
+          content: opt ? (opt.content || '') : '',
+        };
+      });
+      form.correctAnswers = res.options
+        .filter((o: any) => o.is_correct || o.isCorrect)
+        .map((o: any) => o.option_key || o.key);
+    }
+    if (res.explanation) form.explanation = res.explanation;
+    if (res.difficulty) {
+      form.difficulty = res.difficulty;
+      difficultyIndex.value = difficultyValues.indexOf(res.difficulty);
+    }
+    if (res.tags && Array.isArray(res.tags)) {
+      form.tags = res.tags;
+      tagInput.value = res.tags.join(',');
+    }
+    uni.showToast({ title: 'AI生成成功', icon: 'success' });
+  } catch (e: any) {
+    const msg = e?.detail || e?.message || '生成失败';
+    uni.showToast({ title: msg, icon: 'none', duration: 3000 });
+  } finally {
+    aiLoading.value = false;
+  }
 }
 
 async function submitQuestion() {
@@ -498,6 +546,34 @@ onMounted(() => {
         height: 160rpx;
         padding: 16rpx 24rpx;
         width: 100%;
+      }
+
+      .form-input-wrap {
+        display: flex;
+        gap: 16rpx;
+        align-items: flex-start;
+
+        .form-textarea {
+          flex: 1;
+        }
+
+        .ai-btn {
+          width: 140rpx;
+          height: 72rpx;
+          background: #2196F3;
+          color: #fff;
+          border-radius: 16rpx;
+          font-size: 26rpx;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          margin-top: 8rpx;
+
+          &:disabled {
+            background: #90CAF9;
+          }
+        }
       }
 
       .picker-value {

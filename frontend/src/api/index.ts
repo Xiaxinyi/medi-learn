@@ -32,6 +32,7 @@ export const questionApi = {
   create: (data: any) => api.post('/api/questions', data),
   update: (id: string, data: any) => api.put(`/api/questions/${id}`, data),
   delete: (id: string) => api.del(`/api/questions/${id}`),
+  generate: (topic: string) => api.post('/api/questions/generate', null, { topic }),
 };
 
 // 考试
