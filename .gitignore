@@ -29,3 +29,6 @@ backend/test.db
 # Logs
 *.log
 npm-debug.log*
+
+# Deploy temp
+.vercel-tmp/

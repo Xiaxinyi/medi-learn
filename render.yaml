@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: medi-learn-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 8000
+      - key: DEBUG
+        value: false
+    healthCheckPath: /docs
+    plan: free
