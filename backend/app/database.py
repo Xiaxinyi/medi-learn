@@ -9,12 +9,9 @@ from app.config import settings
 # TiDB Serverless 公共端点需要 TLS 连接
 connect_args = {}
 if "tidbcloud.com" in settings.DATABASE_URL:
-    # 尝试多个常见的 CA 证书路径（macOS / Debian / Alpine）
-    ca_paths = [
-        "/etc/ssl/cert.pem",
-        "/etc/ssl/certs/ca-certificates.crt",
-        "/etc/pki/tls/certs/ca-bundle.crt",
-    ]
+    # 优先使用项目内嵌的 Let's Encrypt 根证书，确保 Docker 容器中也能找到
+    project_ca = os.path.join(os.path.dirname(__file__), "..", "certs", "isrgrootx1.pem")
+    ca_paths = [project_ca, "/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt"]
     ca_file = next((p for p in ca_paths if os.path.exists(p)), None)
     if ca_file:
         connect_args["ssl"] = {"ca": ca_file}
