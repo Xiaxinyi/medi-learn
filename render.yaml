@@ -11,5 +11,27 @@ services:
         value: 8000
       - key: DEBUG
         value: false
+      - key: APP_NAME
+        value: 中医学习小程序
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 10080
+      - key: ALLOW_ORIGINS
+        value: '["*"]'
+      - key: UPLOAD_DIR
+        value: ./uploads
+      - key: MAX_FILE_SIZE
+        value: 5242880
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        value: https://dashscope.aliyuncs.com/compatible-mode/v1
+      - key: OPENAI_MODEL
+        value: qwen-turbo
     healthCheckPath: /docs
     plan: free
