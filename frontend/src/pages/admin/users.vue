@@ -125,7 +125,7 @@ function requestDirect(url: string, method: string, data?: any): Promise<any> {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync('token');
     uni.request({
-      url: 'http://localhost:8000' + url,
+      url: (process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://medi-learn-backend.onrender.com') + url,
       method: method as any,
       data,
       header: {

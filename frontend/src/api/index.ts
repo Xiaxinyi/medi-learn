@@ -89,7 +89,7 @@ export const uploadApi = {
   image: (filePath: string) => {
     return new Promise((resolve, reject) => {
       uni.uploadFile({
-        url: 'http://localhost:8000/api/upload/image',
+        url: (process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://medi-learn-backend.onrender.com') + '/api/upload/image',
         filePath,
         name: 'file',
         header: {
